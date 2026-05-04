@@ -1,0 +1,17 @@
+version: '3.9'
+services:
+  backend:
+    image: node:18
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+    command: sh -c "npm init -y && npm install express body-parser uuid && node app.ts"
+    ports:
+      - "3001:3001"
+
+  agent:
+    image: python:3.11
+    working_dir: /app
+    volumes:
+      - ./agent-runtime:/app
+    command: python main.py
