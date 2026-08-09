@@ -1,0 +1,23 @@
+{
+  "product": "UniVersaTeach",
+  "release": "Harness Runtime v2",
+  "principle": "THE HARNESS IS THE RELEASE. THE MODEL IS A PARAMETER.",
+  "version": "2.0.0",
+  "bindings": {
+    "workflow": {"id": "universateach-primary", "version": 1},
+    "policy": {"id": "universateach-default", "version": 1},
+    "memory": {"snapshotId": "memory-baseline-v1", "version": 1},
+    "model": {"adapter": "replaceable"},
+    "agents": ["dr-brain-genii", "dr-van-beanie", "trace-weaver"]
+  },
+  "run_controls": ["checkpoint", "fork", "replay", "revert"],
+  "provenance": {"release_hash_required": true, "per_run_binding_required": true},
+  "financial_boundary": {
+    "simulation": true,
+    "autonomous_trade": false,
+    "move_funds": false,
+    "withdraw": false,
+    "transfer": false
+  },
+  "promotion": "blocked_until_external_environment_acceptance"
+}
