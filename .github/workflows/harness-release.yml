@@ -1,0 +1,31 @@
+name: UniVersaTeach Harness Release
+
+on:
+  push:
+    branches: [main, universateach-harness-v2]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate-harness:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate release contract
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path('harness/HARNESS_RELEASE.json')
+          d = json.loads(p.read_text())
+          assert d['principle'] == 'THE HARNESS IS THE RELEASE. THE MODEL IS A PARAMETER.'
+          assert set(['checkpoint','fork','replay','revert']).issubset(d['run_controls'])
+          assert d['financial_boundary']['autonomous_trade'] is False
+          assert d['financial_boundary']['move_funds'] is False
+          print('Harness release contract: PASS')
+          PY
+
+      - name: Verify existing Python runtime syntax
+        run: python -m compileall -q agent-runtime backend
