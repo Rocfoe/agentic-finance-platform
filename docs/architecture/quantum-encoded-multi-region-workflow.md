@@ -18,17 +18,13 @@ Each phase is represented as a classical state vector `v_k ∈ R^d`, with a tran
 
 ## Regional state model
 
-The source defines regional state variables for:
+The source defines regional state variables for edge latency, payload size, IP hash, geographic code, PII risk, IP sensitivity, vault token references, region pinning, local spot price, base FX, tariff, commodity volatility, cost floor, finished cost, geometry/toolpath parameters, commit LSN, synchronization latency, replica state, and entropy hash.
 
-- edge latency, payload size, IP hash, and geographic code;
-- PII risk, IP sensitivity, vault token references, and region pinning;
-- local spot price, base FX, tariff, and commodity volatility;
-- cost floor, finished cost, geometry/toolpath parameters, and the stated `idiot_index` ratio;
-- commit LSN, synchronization latency, replica state, and entropy hash.
+The source also defines a first-principles `idiot_index` ratio as finished cost divided by a positive floor cost.
 
 ## Multi-region data alignment
 
-The source targets `us-east-1`, `europe-west-1`, and edge ingress nodes, with AlloyDB global read-pool synchronization. The repository implementation stores the corresponding regional workflow state in `workflow_regions`, vector transitions in `workflow_vector_events`, and quantum encoding specifications in `quantum_encoding_events`.
+The source targets `us-east-1`, `europe-west-1`, and edge ingress nodes, with AlloyDB global read-pool synchronization. The repository implementation stores corresponding regional workflow state in `workflow_regions`, vector transitions in `workflow_vector_events`, and quantum encoding specifications in `quantum_encoding_events`.
 
 ## Quantum encoding boundary
 
@@ -37,8 +33,6 @@ The repository implementation is deliberately explicit about the distinction bet
 The source's target formulation is a global tensor state `|Ψ_global⟩` and a cost Hamiltonian expectation `⟨Ψ_global|H_cost|Ψ_global⟩`. The current service represents the corresponding expectation as an auditable classical surrogate loss until a validated quantum backend is attached.
 
 ## Integration with the constraint engine
-
-The workflow layer complements the budget constraint graph:
 
 ```text
 regional ingress
