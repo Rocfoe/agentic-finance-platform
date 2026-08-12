@@ -1,0 +1,19 @@
+{
+  "mediaId": "axon-external-reference-001",
+  "sourceType": "video",
+  "canonical": false,
+  "sourceRef": "external-reference",
+  "rightsStatus": "reference-only",
+  "chapters": [
+    {"id":"axon","semanticRole":"signal_ingress"},
+    {"id":"signal_pathway","semanticRole":"high_fidelity_transport"},
+    {"id":"neural_protocol","semanticRole":"persistent_pathway"},
+    {"id":"zero_degradation","semanticRole":"integrity_checkpoint"},
+    {"id":"pure_execution","semanticRole":"authorized_execution"}
+  ],
+  "renderers": ["video-texture","image","webgl","timeline","ui"],
+  "provenance": {
+    "sourceIdentity": "external-reference",
+    "transformation": "semantic and architectural reference"
+  }
+}
