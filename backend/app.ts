@@ -3,6 +3,7 @@ import bodyParser from "body-parser";
 import { v4 as uuid } from "uuid";
 import { analyzeBudget, classifyDirective, BudgetModel, CandidateAllocation } from "./services/budgetConstraintEngine";
 import { encodeGlobalWorkflow, encodeRegionalWorkflow, RegionalWorkflowInput } from "./services/quantumWorkflowEngine";
+import { buildClientEngagementPlan, ClientEngagementRequest } from "./services/clientEngagementEngine";
 
 const app = express();
 app.use(bodyParser.json());
@@ -78,6 +79,14 @@ app.post("/api/workflow/encode-global", (req, res) => {
     return res.status(400).json({ error: "regions_required" });
   }
   res.json(encodeGlobalWorkflow(inputs));
+});
+
+app.post("/api/engagement/plan", (req, res) => {
+  const request = req.body as ClientEngagementRequest;
+  if (!request || typeof request.clientId !== "string" || typeof request.objective !== "string") {
+    return res.status(400).json({ error: "clientId_and_objective_required" });
+  }
+  res.json(buildClientEngagementPlan(request));
 });
 
 app.listen(3001, () => console.log("Backend running on :3001"));
