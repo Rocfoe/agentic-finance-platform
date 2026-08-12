@@ -36,7 +36,7 @@ describe('AXON state engine', () => {
     expect(next.evidenceRefs).toContain('evt-1');
   });
 
-  it('requires an explicit permission context before execution', () => {
+  it('blocks execution without explicit authorization', () => {
     const initial: CanonicalState = {
       recordId: 'node-1',
       versionId: 'v2',
@@ -50,6 +50,8 @@ describe('AXON state engine', () => {
       timestamp: new Date().toISOString(),
     };
 
-    expect(() => transitionState(initial, 'EXECUTING')).not.toThrow();
+    expect(() => transitionState(initial, 'EXECUTING')).toThrow(
+      'Execution requires explicit execute authorization',
+    );
   });
 });
