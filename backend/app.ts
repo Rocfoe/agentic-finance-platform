@@ -1,22 +1,66 @@
 import express from "express";
 import bodyParser from "body-parser";
 import { v4 as uuid } from "uuid";
+import { analyzeBudget, classifyDirective, BudgetModel, CandidateAllocation } from "./services/budgetConstraintEngine";
 
 const app = express();
 app.use(bodyParser.json());
 
-let sources:any[]=[];let strategies:any[]=[];let clones:any[]=[];let runs:any[]=[];
+const sources: any[] = [];
+const strategies: any[] = [];
+const clones: any[] = [];
+const runs: any[] = [];
 
-app.post("/api/ingest/conversation",(req,res)=>{const id=uuid();sources.push({id,content:req.body.text});res.json({source_id:id});});
+app.get("/health", (_req, res) => res.json({ status: "ok", service: "agentic-finance-platform" }));
 
-app.post("/api/strategies/extract",(req,res)=>{const strat={id:uuid(),title:"Basic extracted strategy",approved:false};strategies.push(strat);res.json([strat]);});
+app.post("/api/ingest/conversation", (req, res) => {
+  const id = uuid();
+  sources.push({ id, content: req.body.text, created_at: new Date().toISOString() });
+  res.json({ source_id: id });
+});
 
-app.post("/api/strategies/:id/approve",(req,res)=>{const s=strategies.find(x=>x.id===req.params.id);s.approved=true;res.json(s);});
+app.post("/api/strategies/extract", (_req, res) => {
+  const strat = { id: uuid(), title: "Basic extracted strategy", approved: false };
+  strategies.push(strat);
+  res.json([strat]);
+});
 
-app.post("/api/clones/generate",(req,res)=>{const c={id:uuid(),type:"research_clone"};clones.push(c);res.json(c);});
+app.post("/api/strategies/:id/approve", (req, res) => {
+  const s = strategies.find((x) => x.id === req.params.id);
+  if (!s) return res.status(404).json({ error: "strategy_not_found" });
+  s.approved = true;
+  res.json(s);
+});
 
-app.post("/api/clones/:id/run",(req,res)=>{const run={id:uuid(),clone_id:req.params.id,status:"completed",output:"Sample output"};runs.push(run);res.json(run);});
+app.post("/api/clones/generate", (_req, res) => {
+  const c = { id: uuid(), type: "research_clone" };
+  clones.push(c);
+  res.json(c);
+});
 
-app.get("/api/runs",(req,res)=>res.json(runs));
+app.post("/api/clones/:id/run", (req, res) => {
+  const clone = clones.find((x) => x.id === req.params.id);
+  if (!clone) return res.status(404).json({ error: "clone_not_found" });
+  const run = { id: uuid(), clone_id: req.params.id, status: "completed", output: req.body?.output ?? "Simulation completed" };
+  runs.push(run);
+  res.json(run);
+});
 
-app.listen(3001,()=>console.log("Backend running"));
+app.get("/api/runs", (_req, res) => res.json(runs));
+
+app.post("/api/budget/classify-directive", (req, res) => {
+  if (typeof req.body?.language !== "string") return res.status(400).json({ error: "language_required" });
+  res.json({ language: req.body.language, constraint_type: classifyDirective(req.body.language) });
+});
+
+app.post("/api/budget/analyze", (req, res) => {
+  const model = req.body?.model as BudgetModel | undefined;
+  if (!model || typeof model.topline !== "number" || typeof model.fiscalYear !== "number") {
+    return res.status(400).json({ error: "model.topline_and_fiscalYear_required" });
+  }
+  if (model.topline < 0 || model.operations < 0) return res.status(400).json({ error: "budget_values_must_be_nonnegative" });
+  const candidates = (req.body?.candidates ?? []) as CandidateAllocation[];
+  res.json(analyzeBudget(model, candidates));
+});
+
+app.listen(3001, () => console.log("Backend running on :3001"));
