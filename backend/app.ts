@@ -2,6 +2,7 @@ import express from "express";
 import bodyParser from "body-parser";
 import { v4 as uuid } from "uuid";
 import { analyzeBudget, classifyDirective, BudgetModel, CandidateAllocation } from "./services/budgetConstraintEngine";
+import { encodeGlobalWorkflow, encodeRegionalWorkflow, RegionalWorkflowInput } from "./services/quantumWorkflowEngine";
 
 const app = express();
 app.use(bodyParser.json());
@@ -61,6 +62,22 @@ app.post("/api/budget/analyze", (req, res) => {
   if (model.topline < 0 || model.operations < 0) return res.status(400).json({ error: "budget_values_must_be_nonnegative" });
   const candidates = (req.body?.candidates ?? []) as CandidateAllocation[];
   res.json(analyzeBudget(model, candidates));
+});
+
+app.post("/api/workflow/encode-region", (req, res) => {
+  const input = req.body as RegionalWorkflowInput;
+  if (!input || typeof input.regionCode !== "string") {
+    return res.status(400).json({ error: "regionCode_required" });
+  }
+  res.json(encodeRegionalWorkflow(input));
+});
+
+app.post("/api/workflow/encode-global", (req, res) => {
+  const inputs = req.body?.regions as RegionalWorkflowInput[] | undefined;
+  if (!Array.isArray(inputs) || inputs.length === 0) {
+    return res.status(400).json({ error: "regions_required" });
+  }
+  res.json(encodeGlobalWorkflow(inputs));
 });
 
 app.listen(3001, () => console.log("Backend running on :3001"));
