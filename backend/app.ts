@@ -4,6 +4,7 @@ import { v4 as uuid } from "uuid";
 import { analyzeBudget, classifyDirective, BudgetModel, CandidateAllocation } from "./services/budgetConstraintEngine";
 import { encodeGlobalWorkflow, encodeRegionalWorkflow, RegionalWorkflowInput } from "./services/quantumWorkflowEngine";
 import { buildClientEngagementPlan, ClientEngagementRequest } from "./services/clientEngagementEngine";
+import { buildWorkforcePlan, ingestSensorObservation, WorkforceActor, WorkforceTask, SensorObservation } from "./services/workforceEngine";
 
 const app = express();
 app.use(bodyParser.json());
@@ -12,8 +13,11 @@ const sources: any[] = [];
 const strategies: any[] = [];
 const clones: any[] = [];
 const runs: any[] = [];
+const workforceActors: WorkforceActor[] = [];
+const workforceTasks: WorkforceTask[] = [];
+const sensorObservations: SensorObservation[] = [];
 
-app.get("/health", (_req, res) => res.json({ status: "ok", service: "agentic-finance-platform" }));
+app.get("/health", (_req, res) => res.json({ status: "ok", service: "agentic-finance-platform", workforce: true, sensors: true }));
 
 app.post("/api/ingest/conversation", (req, res) => {
   const id = uuid();
@@ -87,6 +91,46 @@ app.post("/api/engagement/plan", (req, res) => {
     return res.status(400).json({ error: "clientId_and_objective_required" });
   }
   res.json(buildClientEngagementPlan(request));
+});
+
+app.post("/api/workforce/actor", (req, res) => {
+  const actor = req.body as WorkforceActor;
+  if (!actor || typeof actor.name !== "string" || !Array.isArray(actor.capabilities)) {
+    return res.status(400).json({ error: "name_and_capabilities_required" });
+  }
+  const created = { ...actor, id: actor.id || uuid(), active: actor.active !== false };
+  workforceActors.push(created);
+  res.json(created);
+});
+
+app.post("/api/workforce/task", (req, res) => {
+  const task = req.body as WorkforceTask;
+  if (!task || typeof task.objective !== "string" || !Array.isArray(task.requiredCapabilities)) {
+    return res.status(400).json({ error: "objective_and_requiredCapabilities_required" });
+  }
+  const created = { ...task, id: task.id || uuid(), status: task.status ?? "queued" };
+  workforceTasks.push(created);
+  res.json(created);
+});
+
+app.post("/api/workforce/engage", (req, res) => {
+  const objective = req.body?.objective;
+  if (typeof objective !== "string" || !objective.trim()) return res.status(400).json({ error: "objective_required" });
+  res.json(buildWorkforcePlan(objective, workforceTasks, workforceActors, sensorObservations));
+});
+
+app.post("/api/sensors/observe", (req, res) => {
+  const observation = req.body as SensorObservation;
+  if (!observation || typeof observation.sensorId !== "string" || typeof observation.confidence !== "number") {
+    return res.status(400).json({ error: "sensorId_and_confidence_required" });
+  }
+  const normalized = ingestSensorObservation(observation);
+  sensorObservations.push(normalized);
+  res.json(normalized);
+});
+
+app.get("/api/workforce/state", (_req, res) => {
+  res.json({ actors: workforceActors, tasks: workforceTasks, sensors: sensorObservations });
 });
 
 app.listen(3001, () => console.log("Backend running on :3001"));
