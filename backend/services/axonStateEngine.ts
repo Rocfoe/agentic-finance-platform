@@ -58,8 +58,8 @@ export function transitionState(
     throw new Error('Canonical state may only commit after the aperture phase');
   }
 
-  if (nextPhase === 'EXECUTING' && !current.permissions) {
-    throw new Error('Execution requires an explicit permission context');
+  if (nextPhase === 'EXECUTING' && current.permissions?.execute !== true) {
+    throw new Error('Execution requires explicit execute authorization');
   }
 
   return {
